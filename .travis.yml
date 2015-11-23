@@ -19,8 +19,5 @@ addons:
     - libblas-dev
     - liblapack-dev
     - gfortran
-before_install:
-  - pip install -U pip
 install:
-  - travis_wait travis_retry pip install -r requirements.txt
-  - travis_retry python setup.py install
+  - pip install -r requirements.txt

@@ -1,0 +1,7 @@
+numpy
+scipy
+pandas
+scikit-learn>=0.17
+deap
+bitstring
+tox

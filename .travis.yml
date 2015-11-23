@@ -8,7 +8,7 @@ matrix:
         - python: 2.7
           env: TOX_ENV=py27
 script:
-  - tox -e $TOXENV
+  - tox -e $TOX_ENV
 addons:
   apt:
     packages:

@@ -13,6 +13,14 @@ setup(name='xtoy',
       author_email='kootenpv@gmail.com',
       license='MIT',
       packages=['xtoy'],
+      install_requires=[
+          'numpy',
+          'scipy',
+          'pandas',
+          'scikit-learn>=0.17',
+          'deap',
+          'bitstring'
+      ],
       classifiers=[
           'Environment :: Console',
           'Intended Audience :: Developers',

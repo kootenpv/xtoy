@@ -25,5 +25,5 @@ before_install:
   - conda update --yes conda
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pip pytest numpy scipy pandas scikit-learn
-  - pip install deap bitstring
+  - pip install deap bitstring tox
   - pip install .

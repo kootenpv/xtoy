@@ -1,8 +1,11 @@
 language: python
 sudo: false
 cache:
-- apt
-- pip
+  apt: true
+  pip: true
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.local
 matrix:
     include:
         - python: 3.5
@@ -22,4 +25,4 @@ addons:
     - python-scipy
     - python3-scipy
 install:
-  - pip install pytest toxnumpy scipy pandas scikit-learn>=0.17 deap bitstring
+  - pip install pytest tox numpy scipy pandas scikit-learn>=0.17 deap bitstring

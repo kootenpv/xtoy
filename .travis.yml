@@ -19,10 +19,15 @@ script:
 addons:
   apt:
     packages:
-    - libblas-dev
-    - liblapack-dev
-    - gfortran
+    - libatlas3gf-base
+    - libatlas-dev
     - python-scipy
     - python3-scipy
 install:
-  - pip install pytest tox numpy scipy pandas scikit-learn>=0.17 deap bitstring
+  - pip install pytest
+  - pip install tox
+  - pip install numpy
+  - pip install scipy
+  - pip install pandas
+  - pip install deap
+  - pip install bitstring

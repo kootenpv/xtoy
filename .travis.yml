@@ -1,6 +1,8 @@
 language: python
 sudo: false
-cache: apt
+cache:
+- apt
+- pip
 matrix:
     include:
         - python: 3.5
@@ -17,13 +19,7 @@ addons:
     - libblas-dev
     - liblapack-dev
     - gfortran
-    - python
-before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - conda update --yes conda
+    - python-scipy
+    - python3-scipy
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip pytest numpy scipy pandas scikit-learn
-  - pip install deap bitstring tox
-  - pip install .
+  - pip install pytest toxnumpy scipy pandas scikit-learn>=0.17 deap bitstring

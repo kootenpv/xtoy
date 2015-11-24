@@ -30,4 +30,4 @@ install:
   - pip install pandas
   - pip install deap
   - pip install bitstring
-  - travis_retry python setup.py install
+  - travis_wait travis_retry python setup.py install

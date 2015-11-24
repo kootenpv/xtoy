@@ -19,8 +19,9 @@ script:
 addons:
   apt:
     packages:
-    - libatlas3gf-base
-    - libatlas-dev
+    - libblas-dev
+    - liblapack-dev
+    - gfortran
     - python-scipy
     - python3-scipy
 install:

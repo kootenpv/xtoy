@@ -22,13 +22,12 @@ addons:
     - libblas-dev
     - liblapack-dev
     - gfortran
-    - python-scipy
-    - python3-scipy
 install:
   - pip install pytest
   - pip install tox
   - pip install numpy
-  - pip install scipy
+  - travis_wait travis_retry pip install scipy
   - pip install pandas
   - pip install deap
   - pip install bitstring
+  - travis_retry python setup.py install

@@ -96,8 +96,8 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
         pop = toolbox.population(n=self.population_size)
         hof = tools.HallOfFame(1)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("avg", np.mean)
         stats.register("min", np.min)
+        stats.register("avg", np.mean)
         stats.register("max", np.max)
 
         if self.verbose:

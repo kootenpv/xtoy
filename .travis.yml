@@ -12,6 +12,8 @@ matrix:
           env: TOX_ENV=py35
         - python: 3.4.3
           env: TOX_ENV=py34
+        - python: 2.7.10
+          env: TOX_ENV=py27
 script:
   - tox -e $TOX_ENV
 addons:
@@ -21,6 +23,7 @@ addons:
     - liblapack-dev
     - gfortran
 install:
+  - pip install -U pip
   - pip install pytest
   - pip install tox
   - pip install numpy

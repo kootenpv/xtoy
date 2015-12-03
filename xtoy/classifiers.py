@@ -9,7 +9,7 @@ from xtoy.utils import is_float
 
 #ridge_grid = {'clf__alpha': [0.001, 0.01, 0.05, 0.1, 0.3, 0.5, 0.8, 1.0, 1.4, 1.7, 10, 100, 1000]}
 
-ridge_grid = {'clf__alpha': [0.1, 1., 10.], 'clf__max_iter': [100000]}
+ridge_grid = {'clf__alpha': [0.1, 1., 10.], 'clf__normalize': [True]}
 
 ridge_classification = {'clf': RidgeClassifier, 'grid': ridge_grid}
 ridge_regression = {'clf': Ridge, 'grid': ridge_grid}

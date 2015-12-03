@@ -10,10 +10,15 @@ from sklearn.linear_model import RidgeClassifier
 
 import numpy as np
 
+try:
+    import pickle
+except (ValueError, SystemError, ImportError):
+    pass
+
 
 class Toy:
 
-    def __init__(self, cv=10, scoring=None, n_jobs=4, cl_or_reg=None, **kwargs):
+    def __init__(self, cv=10, scoring=None, n_jobs=1, cl_or_reg=None, **kwargs):
         self.cv = cv
         self.clf = None
         self.pipeline = None
@@ -56,10 +61,19 @@ class Toy:
 
         self.evo = evo_search(self.pipeline, self.grid, cv=self.cv,
                               scoring=self.scoring, n_jobs=self.n_jobs, **self.kwargs)
-        return self.evo.fit(X, y)
+        m = 0
+        max_tries = 10
+        while not self.evo.best_params_ and m < max_tries:
+            print('fitting', m)
+            f = self.evo.fit(X, y)
+            m += 1
+        return f
 
     def predict(self, X):
         return self.evo.predict(X)
 
     def score(self, X, y):
         return self.evo.best_estimator_.score(X, y)
+
+    def best_model_pickle(self):
+        return pickle.dumps(self.evo.best_estimator_)

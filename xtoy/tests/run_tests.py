@@ -24,9 +24,11 @@ def apply_toy_on(X, y, cl_or_reg=None, n=500, max_tries=3):
         try:
             toy = Toy(cv=2, cl_or_reg=cl_or_reg)
             toy.fit(X[train_index], y[train_index])
-            yield toy.score(X[test_index], y[test_index])
+            score = toy.score(X[test_index], y[test_index])
         except NotFittedError:  # probably have to find the real fix here...
-            pass
+            score = -10000
+        print(score)
+        yield score
 
 
 def test_digits_data():
@@ -44,7 +46,7 @@ def test_iris_data():
 def test_boston_data():
     boston = load_boston()
     X, y = boston.data, boston.target
-    assert any(x > -100 for x in apply_toy_on(X, y))
+    assert any(x > 0.3 for x in apply_toy_on(X, y))
 
 
 def test_breast_cancer_data():
@@ -56,7 +58,7 @@ def test_breast_cancer_data():
 def test_diabetes_data():
     diabetes = load_diabetes()
     X, y = diabetes.data, diabetes.target
-    assert any(x > -100 for x in apply_toy_on(X, y))
+    assert any(x > 0.3 for x in apply_toy_on(X, y))
 
 ###########################################
 # # MULTIOUTPUT NOT SUPPORTED FOR REGRESSION (probably DEAPs fault)
@@ -79,4 +81,4 @@ def test_newsgroup_data():
     X, y = newsgroups.data, newsgroups.target
     X = np.reshape(X, (len(y), 1))
 
-    assert any(x > 0.0 for x in apply_toy_on(X, np.array(y), cl_or_reg='classification'))
+    assert any(x > 0 for x in apply_toy_on(X, np.array(y), cl_or_reg='classification'))

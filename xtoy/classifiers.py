@@ -2,6 +2,7 @@
 import numpy as np
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import RidgeClassifier
+from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.decomposition import TruncatedSVD
@@ -13,6 +14,11 @@ ridge_grid = {'clf__alpha': [0.1, 1., 10.], 'clf__normalize': [True]}
 
 ridge_classification = {'clf': RidgeClassifier, 'grid': ridge_grid}
 ridge_regression = {'clf': Ridge, 'grid': ridge_grid}
+# ridge_regression = {'clf': svm.SVR, 'grid': {
+#     'clf__shrinking': [True, False],
+#     'clf__C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+#     'clf__kernel': ['linear', 'poly', 'rbf', 'sigmoid']}}
+
 
 rf_grid = {'clf__max_features': ['sqrt', 'auto', 'log2', 0.5, 0.8, 0.9],
            'clf__max_depth': [None, 5, 10, 20],

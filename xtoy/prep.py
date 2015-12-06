@@ -78,7 +78,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
-        self.imputer.fit_transform(X)
+        X = self.imputer.fit_transform(X)
         self.ohe_indices = np.zeros(X.shape[1], dtype=bool)
         self.var_names_ = []
         for i, col in enumerate(X):
@@ -91,7 +91,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
         for i, (h, col) in enumerate(zip(self.ohe_indices, X)):
             if not self.is_numeric(X[col]) and not h:
                 countvec = copy.copy(self.count_vectorizer)
-                countvec.fit(X[col])
+                countvec.fit(['' if isinstance(x, float) else x for x in X[col]])
                 self.count_vecs.append(countvec)
                 cv_var_names = ['{}_countvec_{}_{}_{}'.format(col, x, i, j)
                                 for j, x in enumerate(countvec.get_feature_names())]
@@ -112,7 +112,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
-        self.imputer.transform(X)
+        X = self.imputer.transform(X)
         res = []
         cvs = []
         for col in X:

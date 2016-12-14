@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/kootenpv/xtoy.svg?branch=master)](https://travis-ci.org/kootenpv/xtoy)
 
+# Warning: This project has a low priority
+
 ## XtoY
 
 Go from 'X' to 'y' without effort.

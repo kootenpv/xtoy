@@ -1,8 +1,9 @@
 from setuptools import setup
+from setuptools import find_packages
 
 MAJOR_VERSION = '0'
 MINOR_VERSION = '0'
-MICRO_VERSION = '1'
+MICRO_VERSION = '24'
 VERSION = "{}.{}.{}".format(MAJOR_VERSION, MINOR_VERSION, MICRO_VERSION)
 
 setup(name='xtoy',
@@ -12,7 +13,7 @@ setup(name='xtoy',
       author='Pascal van Kooten',
       author_email='kootenpv@gmail.com',
       license='MIT',
-      packages=['xtoy'],
+      packages=find_packages(),
       install_requires=[
           'numpy',
           'scipy',

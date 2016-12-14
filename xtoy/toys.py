@@ -54,20 +54,16 @@ class Toy:
         self.pick_model()
         self.get_pipeline()
         unique_combinations = np.prod(list(map(len, self.grid.values())))
+        print("unique_combinations", unique_combinations)
         if 'population_size' not in self.kwargs:
-            self.kwargs['population_size'] = np.clip(int(unique_combinations / 1000), 3, 10)
+            self.kwargs['population_size'] = np.clip(int(unique_combinations / 1000), 5, 10)
         if 'generations_number' not in self.kwargs:
-            self.kwargs['generations_number'] = np.clip(int(unique_combinations / 200), 0, 50)
+            self.kwargs['generations_number'] = np.clip(int(unique_combinations / 200), 10, 50)
 
         self.evo = evo_search(self.pipeline, self.grid, cv=self.cv,
                               scoring=self.scoring, n_jobs=self.n_jobs, **self.kwargs)
-        m = 0
-        max_tries = 10
-        while not self.evo.best_params_ and m < max_tries:
-            print('fitting', m)
-            f = self.evo.fit(X, y)
-            m += 1
-        return f
+        self.evo.fit(X, y)
+        return self.evo.best_estimator_
 
     def predict(self, X):
         return self.evo.predict(X)

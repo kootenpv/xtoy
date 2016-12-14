@@ -1,0 +1,27 @@
+- decide how to support input (e.g. list/nparray/pandas/database), multiple or enforce 1 way
+  * Underlying question is: is it worth it to support a lot of different inputs?
+  * If the focus is really on just doing a simple model asap, then yes it is very important
+  * If the focus is more on quality of prediction, then it is not important
+- handle big data
+  - allow feature selection
+  - handle in batches rather than full file
+  - minibatch:
+    - perhaps pandas chunked iterator for reading
+    - minibatching using database
+- handle small data
+  - symbolic regression
+  - feature extraction
+    * other methods
+    * "Types" -> e.g. date to day/month/year/season variables
+- integrate small and big data principes
+- make a data interface on the variables for inspection
+  * unique counts
+  * "Type"
+  * expansion_functions
+  * combine_functions
+  * select_functions
+  * compress_functions
+  * sklearn.preprocessing.PolynomialFeatures(degree=2, interaction_only=False, include_bias=False)
+  * sklearn.preprocessing.PolynomialFeatures(degree=2, interaction_only=True   , include_bias=False)
+
+- fit transform should work on empty data, that is, on the "specification of the problem". it needs to know how to find a variable in a grander data scheme and what it can convert it to, rather than the object being the data. e.g. collection/list of Structure(input='/local/path', type='binary', converts_to='..', selects, expands or something)

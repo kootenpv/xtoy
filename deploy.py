@@ -1,5 +1,7 @@
-import sh
+""" File unrelated to the package, except for convenience in deploying """
 import re
+import sh
+import os
 
 commit_count = sh.git('rev-list', ['--all']).count('\n')
 
@@ -20,10 +22,9 @@ with open('xtoy/__init__.py') as f:
     init = f.read()
 
 with open('xtoy/__init__.py', 'w') as f:
-    f.write(re.sub('__version__ = "[0-9.]+"', '__version__ = "{}"'.format(version), init))
+    f.write(
+        re.sub('__version__ = "[0-9.]+"',
+               '__version__ = "{}"'.format(version), init))
 
-print(sh.python3('setup.py', ['bdist_wheel', 'upload']))
-
-sh.cd('../')
-
-sh.pip3('install', ['-U', 'xtoy'])
+py_version = "python3.5" if sh.which("python3.5") is not None else "python"
+os.system('{} setup.py sdist bdist_wheel upload'.format(py_version))

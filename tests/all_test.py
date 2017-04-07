@@ -19,12 +19,9 @@ def apply_toy_on(X, y, cl_or_reg=None, n=500, max_tries=3):
     if not isinstance(X, pd.DataFrame):
         X = pd.DataFrame(X)
     for train_index, test_index in cross_split:
-        try:
-            toy = Toy(cv=2, cl_or_reg=cl_or_reg)
-            toy.fit(X.iloc[train_index], y[train_index])
-            score = toy.score(X.iloc[test_index], y[test_index])
-        except NotFittedError:  # probably have to find the real fix here...
-            score = -10000
+        toy = Toy(cv=2, cl_or_reg=cl_or_reg)
+        toy.fit(X.iloc[train_index], y[train_index])
+        score = toy.score(X.iloc[test_index], y[test_index])
         print(score)
         yield score
 
@@ -58,15 +55,26 @@ def test_diabetes_data():
     X, y = pd.DataFrame(diabetes.data), diabetes.target
     assert any([x > 0.3 for x in apply_toy_on(X, y)])
 
-###########################################
-# # MULTIOUTPUT NOT SUPPORTED FOR REGRESSION (probably DEAPs fault)
-###########################################
-# def test_linnerud_data():
-#     linnerud = load_linnerud()
-#     X, y = linnerud.data, linnerud.target
-#     assert apply_toy_on(X, y) > 0.4
-#
-# test_linnerud_data()
+# problem with really small data, maybe multiply cases like that
+
+
+def test_missing():
+    X = np.array([1, 2, 3, 4, 5, np.nan, np.nan, np.nan, np.nan, np.nan])
+    y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+    assert any([x > 0.1 for x in apply_toy_on(X, y)])
+
+
+# def test_text_missing():
+#     X = np.array(["1", "2", "3", "4", "5", None, None, None, None, None])
+#     y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+#     assert any([x > 0.1 for x in apply_toy_on(X, y)])
+
+
+# multi output regression
+def test_linnerud_data():
+    linnerud = load_linnerud()
+    X, y = linnerud.data, linnerud.target
+    assert any([x > -3000 for x in apply_toy_on(X, y)])
 
 
 def test_newsgroup_data():

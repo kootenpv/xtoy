@@ -45,7 +45,7 @@ class DataFrameImputer(TransformerMixin):
             val = col.mean()
         else:
             val = col.median()
-        if np.isnan(val):
+        if isinstance(val, float) and np.isnan(val):
             val = 0
         return val
 

@@ -1,7 +1,7 @@
 # PROBEER OOIT NOG EEN KEER OM DE countvec OP MAX TE ZETTEN OFZO
 # https://github.com/paulgb/sklearn-pandas
 
-#from sklearn.decomposition import PCA
+# from sklearn.decomposition import PCA
 from sklearn.preprocessing import robust_scale
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import PolynomialFeatures
@@ -29,15 +29,29 @@ class DataFrameImputer(TransformerMixin):
         Columns of other types are imputed with mean of column.
 
         """
+        self.fill = None
+
+    @staticmethod
+    def most_frequent(col):
+        try:
+            return col.value_counts().index[0]
+        except IndexError:
+            return 0
+
+    def get_impute_val(self, col):
+        if col.dtype == np.dtype('O'):
+            val = self.most_frequent(col)
+        elif col.dtype == np.dtype(float):
+            val = col.mean()
+        else:
+            val = col.median()
+        if np.isnan(val):
+            val = 0
+        return val
 
     def fit(self, X, y=None):
-
-        self.fill = pd.Series([
-            X[c].value_counts().index[0]
-            if X[c].dtype == np.dtype('O') else
-            X[c].mean() if X[c].dtype == np.dtype(float) else X[c].median()
-            for c in X],
-            index=X.columns)
+        self.fill = pd.Series([self.get_impute_val(X[c]) for c in X],
+                              index=X.columns)
 
         return self
 
@@ -85,7 +99,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
         for i, col in enumerate(X):
             if self.is_numeric(X[col]):
                 self.var_names_.append('{}_{}_continuous'.format(col, i))
-                if self.is_integer(X[col]) and len(np.unique(X[col])) <= 100:
+                if self.is_integer(X[col]) and len(np.unique(X[col])) <= 15:
                     self.ohe_indices[i] = True
 
         self.one_hot_encoder = OneHotEncoder(handle_unknown='ignore')

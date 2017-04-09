@@ -1,6 +1,6 @@
 from sklearn.pipeline import Pipeline
 
-from xtoy.evolutionary_search import EvolutionaryAlgorithmSearchCV as evo_search
+from evolutionary_search import EvolutionaryAlgorithmSearchCV as evo_search
 from xtoy.prep import Sparsify
 from xtoy.classifiers import pick
 from xtoy.classifiers import classification_or_regression

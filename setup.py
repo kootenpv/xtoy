@@ -22,6 +22,9 @@ setup(name='xtoy',
           'deap',
           'bitstring'
       ],
+      dependency_links=[
+          "git+git://github.com/kootenpv/sklearn-deap.git@c68ba59559bca9c4308ec55a0f78e917ccc4d5e3"
+      ],
       classifiers=[
           'Environment :: Console',
           'Intended Audience :: Developers',

@@ -7,8 +7,7 @@ Go from 'X' to 'y' without effort.
 ``` python
 from sklearn.datasets import load_digits
 from xtoy.toys import Toy
-digits = load_digits()
-X, y = digits.data, digits.target
+X, y = load_digits(return_X_y=True)
 toy = Toy()
 toy.fit(X[:900], y[:900])
 toy.predict(X[900:])

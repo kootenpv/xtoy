@@ -1,14 +1,13 @@
+import pandas as pd
+import numpy as np
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import Normalizer
 
-from evolutionary_search import EvolutionaryAlgorithmSearchCV as evo_search
+from xtoy.evolutionary_search import EvolutionaryAlgorithmSearchCV as evo_search
 from xtoy.prep import Sparsify
 from xtoy.classifiers import pick
 from xtoy.classifiers import classification_or_regression
-from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import RidgeClassifier
 
-import numpy as np
 
 try:
     import pickle
@@ -41,16 +40,19 @@ class Toy:
             ('sparse', Sparsify()),
             #('tsvd', TruncatedSVD()),  # this one also has to have % top features chosen
             #('feature_selection', SelectFromModel(Ridge())),
+            ("scaler", Normalizer()),
             ('clf', self.clf())
         ])
 
     def fit(self, X, y):
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
         self.X = X
         self.y = y
         if self.scoring is None:
             tp = classification_or_regression(self.y)
-            # MULTIOUTPUT NOT SUPPORTED FOR REGRESSION (probably DEAPs fault)
-            self.scoring = ['f1_weighted', 'r2'][tp != 'classification']
+            self.scoring = ['f1_weighted', None][tp != 'classification']
+        print(self.scoring)
         self.pick_model()
         self.get_pipeline()
         unique_combinations = np.prod(list(map(len, self.grid.values())))
@@ -60,8 +62,8 @@ class Toy:
         if 'generations_number' not in self.kwargs:
             self.kwargs['generations_number'] = np.clip(int(unique_combinations / 200), 10, 50)
 
-        self.evo = evo_search(self.pipeline, self.grid, cv=self.cv,
-                              scoring=self.scoring, n_jobs=self.n_jobs, **self.kwargs)
+        self.evo = evo_search(self.pipeline, self.grid, scoring=self.scoring,
+                              cv=self.cv, n_jobs=self.n_jobs, **self.kwargs)
         self.evo.fit(X, y)
         return self.evo.best_estimator_
 

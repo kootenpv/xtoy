@@ -1,19 +1,18 @@
 #from sklearn.svm import SVC
-import numpy as np
 import scipy
 from sklearn import svm
 from sklearn.decomposition import TruncatedSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import Ridge, RidgeClassifier
 
-from xtoy.utils import is_float
+from xtoy.utils import classification_or_regression
 
 
 ridge_grid = {'clf__alpha': [0.00001, 0.001, 0.01, 0.05, 0.1, 0.3, 0.5,
-                             0.8, 1.0, 1.4, 1.7, 10, 100, 1000, 1000000],
-              'clf__normalize': [True]}
+                             0.8, 1.0, 1.4, 1.7, 10, 100, 1000, 1000000]}
+# normalize seems bugged at prediction time!
 
-#ridge_grid = {'clf__alpha': [0.1, 1., 10.], 'clf__normalize': [True]}
+#ridge_grid = {'clf__alpha': [0.1, 1., 10.]}
 
 ridge_classification = {'clf': RidgeClassifier, 'grid': ridge_grid}
 ridge_regression = {'clf': Ridge, 'grid': ridge_grid}
@@ -61,11 +60,6 @@ def sparse_or_dense(X, RAM=None, magic=42):
     #     return 'sparse'
     # else:
     #     return 'dense'
-
-
-def classification_or_regression(y):
-    uniq = np.unique(y)
-    return 'regression' if len(uniq) > 10 or any([is_float(x) for x in uniq]) else 'classification'
 
 
 def pick(X, y, cl_or_reg=None, opts=None):

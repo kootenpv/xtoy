@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 MAJOR_VERSION = '0'
-MINOR_VERSION = '1'
+MINOR_VERSION = '2'
 MICRO_VERSION = '24'
 VERSION = "{}.{}.{}".format(MAJOR_VERSION, MINOR_VERSION, MICRO_VERSION)
 
@@ -18,12 +18,9 @@ setup(name='xtoy',
           'numpy',
           'scipy',
           'pandas',
-          'scikit-learn>=0.17',
+          'scikit-learn>=0.18.1',
           'deap',
           'bitstring'
-      ],
-      dependency_links=[
-          "git+git://github.com/kootenpv/sklearn-deap.git@c68ba59559bca9c4308ec55a0f78e917ccc4d5e3"
       ],
       classifiers=[
           'Environment :: Console',

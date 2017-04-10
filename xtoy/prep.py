@@ -2,17 +2,18 @@
 # https://github.com/paulgb/sklearn-pandas
 
 # from sklearn.decomposition import PCA
-from sklearn.preprocessing import robust_scale
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import PolynomialFeatures
-import scipy.sparse
-from sklearn.feature_extraction.text import CountVectorizer
-import numpy as np
-import pandas as pd
 import copy
 
-from sklearn.base import BaseEstimator
-from sklearn.base import TransformerMixin
+import numpy as np
+import pandas as pd
+import scipy.sparse
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import (OneHotEncoder, PolynomialFeatures,
+                                   robust_scale)
+
+from xtoy.utils import is_numeric
+from xtoy.utils import is_integer
 
 
 class DataFrameImputer(TransformerMixin):
@@ -50,9 +51,7 @@ class DataFrameImputer(TransformerMixin):
         return val
 
     def fit(self, X, y=None):
-        self.fill = pd.Series([self.get_impute_val(X[c]) for c in X],
-                              index=X.columns)
-
+        self.fill = pd.Series([self.get_impute_val(X[c]) for c in X], index=X.columns)
         return self
 
     def transform(self, X, y=None):
@@ -62,49 +61,45 @@ class DataFrameImputer(TransformerMixin):
 class Sparsify(BaseEstimator, TransformerMixin):
 
     def __init__(self,
-                 count_vectorizer=CountVectorizer(max_features=100, token_pattern=r"(?u)\b\w+\b")):
+                 count_vectorizer=CountVectorizer(max_features=100, token_pattern=r"(?u)\b\w+\b"),
+                 max_unique_for_discrete=15):
         self.count_vectorizer = count_vectorizer
+        self.max_unique_for_discrete = max_unique_for_discrete
         self.one_hot_encoder = None
+        # scary duplication
+        self.drop_vars = []
         self.count_vecs = []
         self.one_hot_encoder = []
         self.imputer = DataFrameImputer()
         self.ohe_indices = []
+        self.numeric_indices = []
         self.var_names_ = None
-
-    @staticmethod
-    def is_numeric(col):
-        def try_numeric(x):
-            try:
-                float(x)
-                return True
-            except ValueError:
-                return False
-        return np.all([try_numeric(x) for x in col])
-
-    @staticmethod
-    def is_integer(col):
-        def try_int_comparison(x):
-            try:
-                return int(x) == float(x)
-            except ValueError:
-                return False
-        return np.all([try_int_comparison(x) for x in col])
 
     def fit(self, X, y=None):
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
         X = self.imputer.fit_transform(X)
         self.ohe_indices = np.zeros(X.shape[1], dtype=bool)
+        self.numeric_indices = np.zeros(X.shape[1], dtype=bool)
+        self.drop_vars = np.zeros(X.shape[1], dtype=bool)
         self.var_names_ = []
         for i, col in enumerate(X):
-            if self.is_numeric(X[col]):
+            if len(set(X[col])) == 1:
+                self.drop_vars[i] = True
+
+        for i, col in enumerate(X):
+            if self.drop_vars[i]:
+                continue
+            if is_numeric(X[col]):
                 self.var_names_.append('{}_{}_continuous'.format(col, i))
-                if self.is_integer(X[col]) and len(np.unique(X[col])) <= 15:
+                num_unique = len(np.unique(X[col]))
+                if is_integer(X[col]) and 3 <= num_unique <= self.max_unique_for_discrete:
                     self.ohe_indices[i] = True
+                self.numeric_indices[i] = True
 
         self.one_hot_encoder = OneHotEncoder(handle_unknown='ignore')
-        for i, (h, col) in enumerate(zip(self.ohe_indices, X)):
-            if not self.is_numeric(X[col]) and not h:
+        for i, (ohed, col) in enumerate(zip(self.ohe_indices, X)):
+            if not self.drop_vars[i] and not is_numeric(X[col]) and not ohed:
                 countvec = copy.copy(self.count_vectorizer)
                 countvec.fit(['' if isinstance(x, float) else x for x in X[col]])
                 self.count_vecs.append(countvec)
@@ -113,6 +108,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
                 self.var_names_.extend(cv_var_names)
             else:
                 self.count_vecs.append(False)
+
         if np.any(self.ohe_indices):
             self.one_hot_encoder.fit(X[X.columns[self.ohe_indices]])
             # ridiculously complex OHE feature range names
@@ -130,15 +126,19 @@ class Sparsify(BaseEstimator, TransformerMixin):
         X = self.imputer.transform(X)
         res = []
         cvs = []
-        for col in X:
-            if self.is_numeric(X[col]):
+        for i, col in enumerate(X):
+            if self.drop_vars[i] or self.ohe_indices[i] or self.count_vecs[i]:
+                continue
+            if self.numeric_indices[i]:
                 res.append(X[col])
         for cv, col in zip(self.count_vecs, X):
             if cv:
-                cvs.append(cv.transform(['' if isinstance(x, float) else x for x in X[col]]))
+                cvs.append(cv.transform(['' if isinstance(x, (np.int, float)) else x
+                                         for x in X[col]]))
         if np.any(self.ohe_indices):
             ohd = self.one_hot_encoder.transform(X[X.columns[self.ohe_indices]])
             combined = [scipy.sparse.coo_matrix(res).T] + cvs + [ohd]
         else:
             combined = [scipy.sparse.coo_matrix(res).T] + cvs
+
         return scipy.sparse.hstack(combined).tocsr()

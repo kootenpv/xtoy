@@ -133,7 +133,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
                 res.append(X[col])
         for cv, col in zip(self.count_vecs, X):
             if cv:
-                cvs.append(cv.transform(['' if isinstance(x, (np.int, float)) else x
+                cvs.append(cv.transform(['' if isinstance(x, (np.int64, int, float)) else x
                                          for x in X[col]]))
         if np.any(self.ohe_indices):
             ohd = self.one_hot_encoder.transform(X[X.columns[self.ohe_indices]])

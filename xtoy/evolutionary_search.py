@@ -93,8 +93,7 @@ def _evalFunction(individual, name_values, X, y, scorer, cv, iid, fit_params,
         for train_index, test_index in cv.split(X, ay):
             est = individual.est
             est.fit(X.iloc[train_index], np.array(y.iloc[train_index]))
-            _score = est.score(X.iloc[test_index], np.array(y.iloc[test_index]))
-
+            _score = scorer(est, X.iloc[test_index], np.array(y.iloc[test_index]))
             if iid:
                 score += _score * len(test_index)
                 n_test += len(test_index)

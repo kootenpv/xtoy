@@ -22,6 +22,12 @@ def apply_toy_on(X, y, cl_or_reg=None):
     return toy.score(X, y)
 
 
+def test_date():
+    X = [["2015-04"], ["2015-05"], ["2015-06"]] * 10
+    y = [1, 1, 0] * 10
+    assert apply_toy_on(X, y) > 0.5
+
+
 def test_digits_data():
     X, y = load_digits(return_X_y=True)
     assert apply_toy_on(X, y) > 0.7

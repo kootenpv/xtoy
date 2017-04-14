@@ -4,6 +4,7 @@ from sklearn import svm
 from sklearn.decomposition import TruncatedSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import Ridge, RidgeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 from xtoy.utils import classification_or_regression
 
@@ -33,6 +34,9 @@ rf_grid_classification.update({'clf__class_weight': ['balanced']})
 
 rf_classification = {'clf': RandomForestClassifier, 'grid': rf_grid_classification}
 rf_regression = {'clf': RandomForestRegressor, 'grid': rf_grid}
+
+# ridge_classification = {'clf': KNeighborsClassifier, 'grid': {
+#    "clf__n_neighbors": [4], "clf__weights": ["distance"]}}
 
 
 options = {

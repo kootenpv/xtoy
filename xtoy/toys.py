@@ -8,6 +8,8 @@ from xtoy.prep import Sparsify
 from xtoy.classifiers import pick
 from xtoy.classifiers import classification_or_regression
 
+from xtoy.scorers import f1_weighted_scorer
+from xtoy.scorers import mse_scorer
 
 try:
     import pickle
@@ -51,7 +53,7 @@ class Toy:
         self.y = y
         if self.scoring is None:
             tp = classification_or_regression(self.y)
-            self.scoring = ['f1_weighted', None][tp != 'classification']
+            self.scoring = [f1_weighted_scorer, mse_scorer][tp != 'classification']
         print(self.scoring)
         self.pick_model()
         self.get_pipeline()
@@ -72,6 +74,9 @@ class Toy:
 
     def score(self, X, y):
         return self.evo.best_estimator_.score(X, y)
+
+    # def baselines():
+    #     f1_weighted_score
 
     def best_model_pickle(self):
         return pickle.dumps(self.evo.best_estimator_)

@@ -12,6 +12,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import (OneHotEncoder, PolynomialFeatures,
                                    robust_scale)
 
+from dateutil.parser import parse
 from xtoy.utils import is_numeric
 from xtoy.utils import is_integer
 
@@ -62,18 +63,20 @@ class Sparsify(BaseEstimator, TransformerMixin):
 
     def __init__(self,
                  count_vectorizer=CountVectorizer(max_features=100, token_pattern=r"(?u)\b\w+\b"),
-                 max_unique_for_discrete=15):
+                 max_unique_for_discrete=15,
+                 date_atts=("year", "month", "day", "weekday", "hour", "minute", "second")):
         self.count_vectorizer = count_vectorizer
         self.max_unique_for_discrete = max_unique_for_discrete
         self.one_hot_encoder = None
         # scary duplication
         self.drop_vars = []
         self.count_vecs = []
-        self.one_hot_encoder = []
+        self.date_vars = []
         self.imputer = DataFrameImputer()
         self.ohe_indices = []
         self.numeric_indices = []
         self.var_names_ = None
+        self.date_atts = date_atts
 
     def fit(self, X, y=None):
         if not isinstance(X, pd.DataFrame):
@@ -82,6 +85,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
         self.ohe_indices = np.zeros(X.shape[1], dtype=bool)
         self.numeric_indices = np.zeros(X.shape[1], dtype=bool)
         self.drop_vars = np.zeros(X.shape[1], dtype=bool)
+        self.date_vars = np.zeros(X.shape[1], dtype=bool)
         self.var_names_ = []
         for i, col in enumerate(X):
             if len(set(X[col])) == 1:
@@ -96,10 +100,21 @@ class Sparsify(BaseEstimator, TransformerMixin):
                 if is_integer(X[col]) and 3 <= num_unique <= self.max_unique_for_discrete:
                     self.ohe_indices[i] = True
                 self.numeric_indices[i] = True
+            # maybe date
+            else:
+                for x in X[col]:
+                    try:
+                        parse(x)
+                    except ValueError:
+                        break
+                else:
+                    self.date_vars[i] = True
+                    date_var_names = ['{}_date_{}'.format(col, x)
+                                      for j, x in enumerate(self.date_atts)]
+                    self.var_names_.extend(date_var_names)
 
-        self.one_hot_encoder = OneHotEncoder(handle_unknown='ignore')
         for i, (ohed, col) in enumerate(zip(self.ohe_indices, X)):
-            if not self.drop_vars[i] and not is_numeric(X[col]) and not ohed:
+            if not self.drop_vars[i] and not is_numeric(X[col]) and not ohed and not self.date_vars[i]:
                 countvec = copy.copy(self.count_vectorizer)
                 countvec.fit(['' if isinstance(x, float) else x for x in X[col]])
                 self.count_vecs.append(countvec)
@@ -109,6 +124,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
             else:
                 self.count_vecs.append(False)
 
+        self.one_hot_encoder = OneHotEncoder(handle_unknown='ignore')
         if np.any(self.ohe_indices):
             self.one_hot_encoder.fit(X[X.columns[self.ohe_indices]])
             # ridiculously complex OHE feature range names
@@ -126,19 +142,25 @@ class Sparsify(BaseEstimator, TransformerMixin):
         X = self.imputer.transform(X)
         res = []
         cvs = []
+        date_groups = []
         for i, col in enumerate(X):
             if self.drop_vars[i] or self.ohe_indices[i] or self.count_vecs[i]:
                 continue
             if self.numeric_indices[i]:
                 res.append(X[col])
+            elif self.date_vars[i]:
+                prefix = str(col) + "__"
+                dtimes = [parse(x) for x in X[col]]
+                for a in self.date_atts:
+                    dcol = [x.weekday() if a == "weekday" else getattr(x, a) for x in dtimes]
+                    res.append(dcol)
         for cv, col in zip(self.count_vecs, X):
             if cv:
                 cvs.append(cv.transform(['' if isinstance(x, (np.int64, int, float)) else x
                                          for x in X[col]]))
+        combined = [scipy.sparse.coo_matrix(res).T] + cvs
         if np.any(self.ohe_indices):
             ohd = self.one_hot_encoder.transform(X[X.columns[self.ohe_indices]])
-            combined = [scipy.sparse.coo_matrix(res).T] + cvs + [ohd]
-        else:
-            combined = [scipy.sparse.coo_matrix(res).T] + cvs
+            combined = combined + [ohd]
 
         return scipy.sparse.hstack(combined).tocsr()

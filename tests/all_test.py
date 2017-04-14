@@ -17,15 +17,16 @@ def apply_toy_on(X, y, cl_or_reg=None):
         X = pd.DataFrame(X)
     if not isinstance(y, pd.DataFrame):
         y = pd.DataFrame(y)
-    toy = Toy(cv=2, cl_or_reg=cl_or_reg)
-    toy.fit(X, y)
-    return toy.score(X, y)
+    toy = Toy(cl_or_reg=cl_or_reg)
+    toy.fit(X[0::2], y[0::2])
+    return toy.score(X[1::2], y[1::2])
 
 
-def test_date():
-    X = [["2015-04"], ["2015-05"], ["2015-06"]] * 10
-    y = [1, 1, 0] * 10
-    assert apply_toy_on(X, y) > 0.5
+# def test_date():
+#     X = [["2015-04"], ["2015-05"], ["2015-06"]] * 10
+#     y = [1, 1, 0] * 10
+#     assert apply_toy_on(X, y) > 0.5
+from xtoy import Sparsify
 
 
 def test_digits_data():
@@ -62,8 +63,8 @@ def test_missing():
 
 
 def test_text_missing():
-    X = np.array(["1", "2", "3", "4", None, "5", None, None, None, None] * 10)
-    y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1] * 10)
+    X = np.array(["1", "2", "3", "4", None, None, "5", None, None, None, None] * 10)
+    y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1] * 10)
     assert apply_toy_on(X, y) > 0.1
 
 # # sensitive to splitting technique

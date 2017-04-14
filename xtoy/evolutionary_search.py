@@ -90,7 +90,7 @@ def _evalFunction(individual, name_values, X, y, scorer, cv, iid, fit_params,
     # ignoring train_index (-1, 1) shape conversion to (-1,)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        for train_index, test_index in cv.split(X, ay):
+        for train_index, test_index in cv(X, y):
             est = individual.est
             est.fit(X.iloc[train_index], np.array(y.iloc[train_index]))
             _score = scorer(est, X.iloc[test_index], np.array(y.iloc[test_index]))
@@ -100,7 +100,10 @@ def _evalFunction(individual, name_values, X, y, scorer, cv, iid, fit_params,
             else:
                 score += _score
                 n_test += 1
-    score /= float(n_test)
+    try:
+        score /= float(n_test)
+    except:
+        score = 0
 
     return (score,)
 
@@ -297,7 +300,7 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
                 raise ValueError('Target variable (y) has a different number '
                                  'of samples (%i) than data (X: %i samples)'
                                  % (len(y), n_samples))
-        cv = check_cv(self.cv, y=y, classifier=is_classifier(self.estimator))
+        cv = self.cv
 
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, est=clone(self.estimator), fitness=creator.FitnessMax)
@@ -342,7 +345,7 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
         pop, logbook = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2,
                                            ngen=self.generations_number, stats=stats,
                                            halloffame=hof, verbose=self.verbose)
-
+        print(hof[0].fitness.values)
         current_best_score_ = hof[0].fitness.values[0]
         current_best_params_ = _individual_to_params(hof[0], name_values)
 

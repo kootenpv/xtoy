@@ -13,4 +13,4 @@ def mse(*args, **kwargs):
 
 
 f1_weighted_scorer = make_scorer(f1_weighted_score)
-mse_scorer = make_scorer(mse, greater_is_better=False)
+mse_scorer = make_scorer(mse)

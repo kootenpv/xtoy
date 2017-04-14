@@ -95,7 +95,10 @@ class Sparsify(BaseEstimator, TransformerMixin):
             if self.drop_vars[i]:
                 continue
             if is_numeric(X[col]):
-                self.var_names_.append('{}_{}_continuous'.format(col, i))
+                if len(set(X[col])) == 2:
+                    self.var_names_.append('{}_{}_continuous'.format(col, i))
+                else:
+                    self.var_names_.append('{}_{}_dummy'.format(col, i))
                 num_unique = len(np.unique(X[col]))
                 if is_integer(X[col]) and 3 <= num_unique <= self.max_unique_for_discrete:
                     self.ohe_indices[i] = True

@@ -25,16 +25,15 @@ Quality guarantee by testing code changes, with loss measurements on lots of dat
 
 #### Features
 
-- Takes care of encoding text, categorical, dates (not yet), continuous
+- ✓ Takes care of encoding text, categorical, dates (several features), continuous
 - Considers data size (small data -> feature engineering, big data -> feature selection)
-- Takes care of missing values
-- Creates a model
-- Optimizes model parameters
-- Gives you a first prediction
+- ✓ Takes care of missing values
+- ✓ Creates a model
+- ✓ Optimizes model parameters
+- ✓ Gives you a first prediction
 
 #### Roadmap
 
-- Adding dates
 - Considering everything as sparse data, or
 - Working with huge data by considering columns at a time
 - Better classifier settings

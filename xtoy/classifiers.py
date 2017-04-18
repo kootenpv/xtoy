@@ -26,7 +26,7 @@ ridge_regression = {'clf': Ridge, 'grid': ridge_grid}
 rf_grid = {'clf__max_features': ['sqrt', 'auto', 'log2', 0.5, 0.8, 0.9],
            'clf__max_depth': [None, 5, 10, 20],
            'clf__min_samples_leaf': [1, 5, 10],
-           'clf__min_samples_split': [1, 10, 20],
+           'clf__min_samples_split': [2, 10, 20],
            'clf__n_estimators': [50]}
 
 rf_grid_classification = rf_grid.copy()
@@ -71,4 +71,4 @@ def pick(X, y, cl_or_reg=None, opts=None):
     if opts is None:
         opts = options
     cl_or_reg = cl_or_reg if cl_or_reg else classification_or_regression(y)
-    return opts[cl_or_reg][sparse_or_dense(X)][0]
+    return opts[cl_or_reg][sparse_or_dense(X)][1]

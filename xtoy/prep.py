@@ -3,18 +3,58 @@
 
 # from sklearn.decomposition import PCA
 import copy
+import re
+from collections import Counter
 
 import numpy as np
 import pandas as pd
 import scipy.sparse
+
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import (OneHotEncoder, PolynomialFeatures,
                                    robust_scale)
-
 from dateutil.parser import parse
 from xtoy.utils import is_numeric
 from xtoy.utils import is_integer
+
+
+def merge_dicts(dict_args):
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
+
+
+class RegexVectorizer(TransformerMixin):
+
+    def __init__(self, regex_patterns=None, ignore_case=True, dict_vectorizer=DictVectorizer(),
+                 binary=False):
+        self.ignore_case = ignore_case
+        self.binary = binary
+        flags = ignore_case * re.IGNORECASE
+        self.regex_patterns = regex_patterns
+        self.regexes = {k: re.compile(v, flags=flags) for k, v in regex_patterns.items()}
+        self.dict_vectorizer = dict_vectorizer
+
+    def _featurize(self, X):
+        if self.binary:
+            feats = [{name: 1 for name, r in self.regexes.items() if r.search(x)} for x in X]
+        else:
+            feats = [merge_dicts([Counter(name + "_" + m for m in r.findall(x) + ["total"])
+                                  for name, r in self.regexes.items()])
+                     for x in X]
+        return feats
+
+    def fit(self, X, y=None):
+        feats = self._featurize(X)
+        self.dict_vectorizer.fit(feats)
+        return self
+
+    def transform(self, X, y=None):
+        feats = self._featurize(X)
+        return self.dict_vectorizer.transform(feats)
 
 
 class DataFrameImputer(TransformerMixin):

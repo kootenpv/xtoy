@@ -5,8 +5,7 @@ import random
 from deap import base, creator, tools, algorithms
 from multiprocessing import Pool
 from sklearn.base import clone, is_classifier
-from sklearn.model_selection import check_cv
-from sklearn.grid_search import BaseSearchCV
+from sklearn.model_selection._search import check_cv, BaseSearchCV
 from sklearn.metrics.scorer import check_scoring
 from sklearn.utils.validation import _num_samples, indexable
 
@@ -220,7 +219,7 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
         y = data["target"]
 
         from sklearn.svm import SVC
-        from sklearn.cross_validation import StratifiedKFold
+        from sklearn.model_selection import StratifiedKFold
 
         paramgrid = {"kernel": ["rbf"],
                      "C"     : np.logspace(-9, 9, num=25, base=10),

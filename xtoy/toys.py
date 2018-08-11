@@ -80,7 +80,7 @@ class Toy:
             evos.append((evo.best_score_, evo))
 
         self.evos = evos
-        self.best_evo = sorted(self.evos)[-1][1]
+        self.best_evo = sorted(self.evos, key=lambda x: x[0])[-1][1]
         return self.best_evo.best_estimator_
 
     def predict(self, X):

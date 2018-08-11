@@ -1,6 +1,6 @@
 
 __project__ = 'xtoy'
-__version__ = "0.2.43"
+__version__ = "0.3.44"
 
 __all__ = ['tests', 'toys']
 

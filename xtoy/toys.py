@@ -53,7 +53,7 @@ class Toy:
         self._feature_name = np.array(list(X.columns))
         if isinstance(y, pd.DataFrame):
             y = np.array(y)
-        if y.shape[1] == 1:
+        if len(y.shape) > 1 and y.shape[1] == 1:
             y = y.ravel()
         X = pd.DataFrame(self.sparsify.fit_transform(X).A)
         if self.scoring is None:

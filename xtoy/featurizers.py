@@ -54,6 +54,11 @@ class RegexVectorizer(TransformerMixin):
             return Counter()
         return Counter(name + "_" + m for m in matches + ["_any"])
 
+# X = ["I walked", "I am walking"]
+# rv = RegexVectorizer({"walk": "walk[^ ]"})
+# rv.fit_transform(X).todense()
+# rv.featurize(X)
+
 
 class SelectPolynomialByResidual():
     def __init__(self, clf, n_to_select="auto", test_size=0.4, feature_indices=None):

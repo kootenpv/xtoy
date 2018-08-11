@@ -11,7 +11,7 @@ from sklearn.utils.validation import _num_samples, indexable
 
 
 def enum(**enums):
-    return type('Enum', (), enums)
+    return type("Enum", (), enums)
 
 
 param_types = enum(Categorical=1, Numerical=2)
@@ -49,7 +49,7 @@ def _mutIndividual(individual, up, indpb, gene_type=None):
     for i, up, rn in zip(range(len(up)), up, [random.random() for _ in range(len(up))]):
         if rn < indpb:
             individual[i] = random.randint(0, up)
-    return individual,
+    return (individual,)
 
 
 def _cxIndividual(ind1, ind2, indpb, gene_type):
@@ -74,8 +74,9 @@ def _individual_to_params(individual, name_values):
     return dict((name, values[gene]) for gene, (name, values) in zip(individual, name_values))
 
 
-def _evalFunction(individual, name_values, X, y, scorer, cv, iid, fit_params,
-                  verbose=0, error_score='raise'):
+def _evalFunction(
+    individual, name_values, X, y, scorer, cv, iid, fit_params, verbose=0, error_score="raise"
+):
     parameters = _individual_to_params(individual, name_values)
     score = 0
     n_test = 0
@@ -91,8 +92,10 @@ def _evalFunction(individual, name_values, X, y, scorer, cv, iid, fit_params,
         warnings.simplefilter("ignore")
         for train_index, test_index in cv(X, y):
             est = individual.est
-            est.fit(X.iloc[train_index], np.array(y.iloc[train_index]))
-            _score = scorer(est, X.iloc[test_index], np.array(y.iloc[test_index]))
+            train_y = y[train_index]
+            test_y = y[test_index]
+            est.fit(X.iloc[train_index], train_y)
+            _score = scorer(est, X.iloc[test_index], test_y)
             if iid:
                 score += _score * len(test_index)
                 n_test += len(test_index)
@@ -256,16 +259,38 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
         parameters for the model.
     """
 
-    def __init__(self, estimator, params, scoring=None, cv=4,
-                 refit=True, verbose=True, population_size=50,
-                 gene_mutation_prob=0.1, gene_crossover_prob=0.5,
-                 tournament_size=3, generations_number=10, gene_type=None,
-                 n_jobs=1, iid=True, pre_dispatch='2*n_jobs', error_score='raise',
-                 fit_params=None):
+    def __init__(
+        self,
+        estimator,
+        params,
+        scoring=None,
+        cv=4,
+        refit=True,
+        verbose=True,
+        population_size=50,
+        gene_mutation_prob=0.1,
+        gene_crossover_prob=0.5,
+        tournament_size=3,
+        generations_number=10,
+        gene_type=None,
+        n_jobs=1,
+        iid=True,
+        pre_dispatch="2*n_jobs",
+        error_score="raise",
+        fit_params=None,
+    ):
         super(EvolutionaryAlgorithmSearchCV, self).__init__(
-            estimator=estimator, scoring=scoring, fit_params=fit_params,
-            n_jobs=n_jobs, iid=iid, refit=refit, cv=cv, verbose=verbose,
-            pre_dispatch=pre_dispatch, error_score=error_score)
+            estimator=estimator,
+            scoring=scoring,
+            fit_params=fit_params,
+            n_jobs=n_jobs,
+            iid=iid,
+            refit=refit,
+            cv=cv,
+            verbose=verbose,
+            pre_dispatch=pre_dispatch,
+            error_score=error_score,
+        )
         self.params = params
         self.possible_params = params if isinstance(params, list) else [params]
         self.population_size = population_size
@@ -296,13 +321,19 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
 
         if y is not None:
             if len(y) != n_samples:
-                raise ValueError('Target variable (y) has a different number '
-                                 'of samples (%i) than data (X: %i samples)'
-                                 % (len(y), n_samples))
+                raise ValueError(
+                    "Target variable (y) has a different number "
+                    "of samples (%i) than data (X: %i samples)" % (len(y), n_samples)
+                )
         cv = self.cv
 
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, est=clone(self.estimator), fitness=creator.FitnessMax)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            #  * y.shape[1]
+            creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+            creator.create(
+                "Individual", list, est=clone(self.estimator), fitness=creator.FitnessMax
+            )
 
         toolbox = base.Toolbox()
 
@@ -316,13 +347,23 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
         toolbox.register("individual", _initIndividual, creator.Individual, maxints=maxints)
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-        toolbox.register("evaluate", _evalFunction,
-                         name_values=name_values, X=X, y=y,
-                         scorer=self.scorer_, cv=cv, iid=self.iid, verbose=self.verbose,
-                         error_score=self.error_score, fit_params=self.fit_params)
+        toolbox.register(
+            "evaluate",
+            _evalFunction,
+            name_values=name_values,
+            X=X,
+            y=y,
+            scorer=self.scorer_,
+            cv=cv,
+            iid=self.iid,
+            verbose=self.verbose,
+            error_score=self.error_score,
+            fit_params=self.fit_params,
+        )
 
-        toolbox.register("mate", _cxIndividual, indpb=self.gene_crossover_prob,
-                         gene_type=self.gene_type)
+        toolbox.register(
+            "mate", _cxIndividual, indpb=self.gene_crossover_prob, gene_type=self.gene_type
+        )
 
         toolbox.register("mutate", _mutIndividual, indpb=self.gene_mutation_prob, up=maxints)
         toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
@@ -338,20 +379,30 @@ class EvolutionaryAlgorithmSearchCV(BaseSearchCV):
         stats.register("max", np.max)
 
         if self.verbose:
-            msg_template = '--- Evolve in {0} possible combinations ---'
+            msg_template = "--- Evolve in {0} possible combinations ---"
             print(msg_template.format(np.prod(np.array(maxints) + 1)))
 
-        pop, logbook = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2,
-                                           ngen=self.generations_number, stats=stats,
-                                           halloffame=hof, verbose=self.verbose)
+        pop, logbook = algorithms.eaSimple(
+            pop,
+            toolbox,
+            cxpb=0.5,
+            mutpb=0.2,
+            ngen=self.generations_number,
+            stats=stats,
+            halloffame=hof,
+            verbose=self.verbose,
+        )
         print(hof[0].fitness.values)
+
         current_best_score_ = hof[0].fitness.values[0]
         current_best_params_ = _individual_to_params(hof[0], name_values)
 
         print("cbp", current_best_params_)
         if self.verbose:
-            print("Best individual is: %s\nwith fitness: %s" % (
-                current_best_params_, current_best_score_))
+            print(
+                "Best individual is: %s\nwith fitness: %s"
+                % (current_best_params_, current_best_score_)
+            )
 
         if current_best_score_ > self.best_score_:
             self.best_score_ = current_best_score_

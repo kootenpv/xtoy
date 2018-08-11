@@ -10,6 +10,7 @@ from sklearn.datasets import fetch_20newsgroups
 from sklearn.datasets import make_regression
 
 from xtoy.toys import Toy
+from xtoy import Sparsify
 
 
 def apply_toy_on(X, y, cl_or_reg=None):
@@ -22,11 +23,10 @@ def apply_toy_on(X, y, cl_or_reg=None):
     return toy.score(X[1::2], y[1::2])
 
 
-# def test_date():
-#     X = [["2015-04"], ["2015-05"], ["2015-06"]] * 10
-#     y = [1, 1, 0] * 10
-#     assert apply_toy_on(X, y) > 0.5
-from xtoy import Sparsify
+def test_date():
+    X = [["2015-04"], ["2015-05"], ["2015-06"]] * 10
+    y = [1, 1, 0] * 10
+    assert apply_toy_on(X, y) > 0.5
 
 
 def test_digits_data():
@@ -53,6 +53,7 @@ def test_diabetes_data():
     X, y = load_diabetes(return_X_y=True)
     assert apply_toy_on(X, y)
 
+
 # problem with really small data, maybe multiply cases like that
 
 
@@ -61,29 +62,18 @@ def test_missing():
     y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1] * 10)
     assert apply_toy_on(X, y) > 0.1
 
+
 # has issue with O and float
-# def test_text_missing():
-#     X = np.array(["1", "2", "3", "4", None, None, "5", None, None, None, None] * 10)
-#     y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1] * 10)
-#     assert apply_toy_on(X, y) > 0.1
-
-
 def test_text_missing():
-    X = np.array(["1", "2", "3", "4", None, None, "5a", None, None, None, None] * 10)
+    X = np.array(["1", "2", "3", "4", None, None, "5", None, None, None, None] * 10)
     y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1] * 10)
     assert apply_toy_on(X, y) > 0.1
 
-# # sensitive to splitting technique
-# def test_missing():
-#     X = np.array([1, 2, 3, 4, 5, np.nan, np.nan, np.nan, np.nan, np.nan])
-#     y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
-#     assert apply_toy_on(X, y) > 0.1
 
-
-# def test_text_missing():
-#     X = np.array(["1", "2", "3", "4", "5", None, None, None, None, None])
-#     y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
-#     assert apply_toy_on(X, y) > 0.1
+def test_text_missing2():
+    X = np.array(["1", "2", "3", "4", None, None, "5a", None, None, None, None] * 10)
+    y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1] * 10)
+    assert apply_toy_on(X, y) > 0.1
 
 
 # multi output regression
@@ -93,7 +83,15 @@ def test_linnerud_data():
 
 
 def test_date_missing_data():
-    data = pd.read_csv("../data/nba_2016.csv")
+    import os
+
+    filename = None
+    for fn in ["../data/nba_2016.csv", "data/nba_2016.csv"]:
+        if os.path.exists(fn):
+            filename = fn
+    if filename is None:
+        return
+    data = pd.read_csv(filename)
     X, y = data.drop("PTS.1", axis=1), data["PTS.1"]
     assert apply_toy_on(X, y)
 
@@ -104,11 +102,11 @@ def test_make_reg():
 
 
 def test_newsgroup_data():
-    categories = ['alt.atheism', 'talk.religion.misc', 'comp.graphics', 'sci.space']
+    categories = ["alt.atheism", "talk.religion.misc", "comp.graphics", "sci.space"]
 
-    newsgroups = fetch_20newsgroups(subset='train',
-                                    remove=('headers', 'footers', 'quotes'),
-                                    categories=categories)
+    newsgroups = fetch_20newsgroups(
+        subset="train", remove=("headers", "footers", "quotes"), categories=categories
+    )
 
     X, y = pd.DataFrame(newsgroups.data), newsgroups.target
-    assert apply_toy_on(X, y, cl_or_reg='classification')
+    assert apply_toy_on(X, y, cl_or_reg="classification")

@@ -30,6 +30,16 @@ def is_integer(col):
     return np.all([try_int_comparison(x) for x in col])
 
 
+def get_type(x):
+    try:
+        if int(x) != float(x):
+            return float
+        return int
+    except ValueError:
+        pass
+    return str
+
+
 def get_cv_splits(X, y, sample_size=500, n_splits=3, cl_or_reg=None):
     sample_size = min(len(y), sample_size)
     cl_or_reg = cl_or_reg if cl_or_reg else classification_or_regression(y)

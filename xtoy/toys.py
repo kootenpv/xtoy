@@ -4,7 +4,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 
 from xtoy.evolutionary_search import EvolutionaryAlgorithmSearchCV as evo_search
-from xtoy.prep import Sparsify
+from xtoy.prep import Featurizer
 from xtoy.classifiers import pick
 from xtoy.classifiers import classification_or_regression
 
@@ -29,7 +29,7 @@ class Toy:
         self.n_jobs = n_jobs
         self.kwargs = kwargs
         self.cl_or_reg = cl_or_reg
-        self.sparsify = Sparsify(sparse=True)
+        self.featurizer = Featurizer(sparse=True)
         self._feature_name = None
         self.evos = []
 
@@ -55,7 +55,7 @@ class Toy:
             y = np.array(y)
         if len(y.shape) > 1 and y.shape[1] == 1:
             y = y.ravel()
-        X = pd.DataFrame(self.sparsify.fit_transform(X).A)
+        X = pd.DataFrame(self.featurizer.fit_transform(X).A)
         if self.scoring is None:
             tp = classification_or_regression(y)
             self.scoring = [f1_weighted_scorer, mse_scorer][tp != "classification"]
@@ -84,15 +84,15 @@ class Toy:
         return self.best_evo.best_estimator_
 
     def predict(self, X):
-        X = self.sparsify.transform(X).A
+        X = self.featurizer.transform(X).A
         return self.best_evo.predict(X)
 
     def predict_proba(self, X):
-        X = self.sparsify.transform(X).A
+        X = self.featurizer.transform(X).A
         return self.best_evo.predict_proba(X)
 
     def score(self, X, y):
-        X = self.sparsify.transform(X).A
+        X = self.featurizer.transform(X).A
         return self.best_evo.best_estimator_.score(X, y)
 
     # def baselines():
@@ -114,11 +114,11 @@ class Toy:
 
     @property
     def feature_names_(self):
-        return self.sparsify.feature_names_
+        return self.featurizer.feature_names_
 
     @property
     def feature_indices_(self):
-        return self.sparsify.feature_indices_
+        return self.featurizer.feature_indices_
 
     def best_features_(self, n=10, aggregation=np.max):
         # a bit annoying that aggregation makes different shape if aggregation=None

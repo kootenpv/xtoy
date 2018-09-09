@@ -10,7 +10,7 @@ from sklearn.datasets import fetch_20newsgroups
 from sklearn.datasets import make_regression
 
 from xtoy.toys import Toy
-from xtoy import Sparsify
+from xtoy import Featurizer
 
 
 def apply_toy_on(X, y, cl_or_reg=None):

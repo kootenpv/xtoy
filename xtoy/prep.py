@@ -62,17 +62,17 @@ class DataFrameImputer(TransformerMixin):
         return X.fillna(self.fill, inplace=False)
 
 
-class Sparsify(BaseEstimator, TransformerMixin):
+class Featurizer(BaseEstimator, TransformerMixin):
     def __init__(
         self,
-        count_vectorizer=CountVectorizer(max_features=15, token_pattern=r"(?u)\b\w+\b"),
+        count_vectorizer_kwargs={"max_features": 15, "token_pattern": r"(?u)\b\w+\b"},
         max_unique_for_discrete=15,
         date_atts=("year", "month", "day", "weekday", "hour", "minute", "second"),
         regex_vectorizer=None,
         regex_patterns=None,
         sparse=True,
     ):
-        self.count_vectorizer = count_vectorizer
+        self.count_vectorizer = CountVectorizer(**count_vectorizer_kwargs)
         self.regex_vectorizer = (
             regex_vectorizer or RegexVectorizer(regex_patterns) if regex_patterns else None
         )
@@ -258,8 +258,10 @@ class Sparsify(BaseEstimator, TransformerMixin):
         return result
 
 
+Sparsify = Featurizer
+
 # for k in train:
-#     s = Sparsify()
+#     s = Featurizer()
 #     XX = s.fit_transform(train[k])
 #     assert len(s.feature_names_) == XX.shape[1]
 
@@ -272,7 +274,7 @@ class Sparsify(BaseEstimator, TransformerMixin):
 
 
 # import copy
-# s = Sparsify()
+# s = Featurizer()
 # XX = s.fit_transform(train[::2])
 # XX2 = s.transform(train[1::2])
 

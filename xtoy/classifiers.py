@@ -4,7 +4,7 @@ from sklearn import svm
 from sklearn.decomposition import TruncatedSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import Ridge, RidgeClassifier
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from xtoy.utils import classification_or_regression
 
@@ -25,7 +25,7 @@ ridge_grid = {
         10,
         100,
         1000,
-        1000000,
+        1_000_000,
     ]
 }
 # normalize seems bugged at prediction time!
@@ -48,19 +48,29 @@ rf_grid = {
     "clf__n_estimators": [50],
 }
 
+knn_grid = {
+    "clf__n_neighbors": [1, 2, 3, 5, 10, 20],
+    "clf__leaf_size": [2, 3, 5, 10, 30, 50, 100],
+    "clf__p": [1, 2, 5, 10],
+    "clf__weights": ["uniform", "distance"],
+}
+
 rf_grid_classification = rf_grid.copy()
 rf_grid_classification.update({"clf__class_weight": ["balanced"]})
 
 rf_classification = {"clf": RandomForestClassifier, "grid": rf_grid_classification}
 rf_regression = {"clf": RandomForestRegressor, "grid": rf_grid}
 
+knn_classification = {"clf": KNeighborsClassifier, "grid": knn_grid}
+knn_regression = {"clf": KNeighborsRegressor, "grid": knn_grid}
+
 # ridge_classification = {'clf': KNeighborsClassifier, 'grid': {
 #    "clf__n_neighbors": [4], "clf__weights": ["distance"]}}
 
 
 options = {
-    "regression": [ridge_regression, rf_regression],
-    "classification": [ridge_classification, rf_classification],
+    "regression": [ridge_regression, rf_regression, knn_regression],
+    "classification": [ridge_classification, rf_classification, knn_classification],
 }
 
 

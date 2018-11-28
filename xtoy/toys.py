@@ -53,7 +53,9 @@ class Toy:
         self._feature_name = np.array(list(X.columns))
         if isinstance(y, pd.DataFrame):
             y = np.array(y)
-        if len(y.shape) > 1 and y.shape[1] == 1:
+        elif hasattr(y, "__array__"):
+            y = y.__array__()
+        elif len(y.shape) > 1 and y.shape[1] == 1:
             y = y.ravel()
         X = pd.DataFrame(self.featurizer.fit_transform(X).A)
         if self.scoring is None:
@@ -62,23 +64,28 @@ class Toy:
         print(self.scoring)
 
         for model in self.get_models(X, y):
-            clf = model["clf"]
-            grid = model["grid"]
-            pipeline = self.get_pipeline(clf)
-            unique_combinations = np.prod(list(map(len, grid.values())))
-            print("unique_combinations", unique_combinations)
-            kwargs = self.kwargs.copy()
-            if "population_size" not in self.kwargs:
-                kwargs["population_size"] = np.clip(int(unique_combinations / 1000), 5, 10)
-            if "generations_number" not in kwargs:
-                kwargs["generations_number"] = np.clip(int(unique_combinations / 20), 10, 50)
+            try:
+                clf = model["clf"]
+                grid = model["grid"]
+                pipeline = self.get_pipeline(clf)
+                unique_combinations = np.prod(list(map(len, grid.values())))
+                print("unique_combinations", unique_combinations)
+                kwargs = self.kwargs.copy()
+                if "population_size" not in self.kwargs:
+                    kwargs["population_size"] = np.clip(int(unique_combinations / 1000), 5, 10)
+                if "generations_number" not in kwargs:
+                    kwargs["generations_number"] = np.clip(int(unique_combinations / 20), 10, 50)
 
-            evo = evo_search(
-                pipeline, grid, scoring=self.scoring, cv=self.cv, n_jobs=self.n_jobs, **kwargs
-            )
-            evo.fit(X, y)
-            evos.append((evo.best_score_, evo))
-
+                evo = evo_search(
+                    pipeline, grid, scoring=self.scoring, cv=self.cv, n_jobs=self.n_jobs, **kwargs
+                )
+                evo.fit(X, y)
+                evos.append((evo.best_score_, evo))
+            except KeyboardInterrupt:
+                if not evos:
+                    print("Stopped by user. No models finished trained; failed to fit.")
+                    raise
+                print("Stopped by user. {} models trained.".format(len(evos)))
         self.evos = evos
         self.best_evo = sorted(self.evos, key=lambda x: x[0])[-1][1]
         return self.best_evo.best_estimator_
@@ -99,7 +106,7 @@ class Toy:
     #     f1_weighted_score
 
     def best_model_pickle(self):
-        return pickle.dumps(self.best_evo.best_estimator_)
+        return pickle.dumps(self.best_pipeline_)
 
     @property
     def feature_importances_(self):
@@ -136,3 +143,7 @@ class Toy:
             agg = pdata.groupby(["features"]).agg(aggregation)
             data = list(zip(agg["importances"].values, agg.index))
         return sorted(data)[-n:]
+
+    @property
+    def best_pipeline_(self):
+        return self.best_evo.best_estimator_

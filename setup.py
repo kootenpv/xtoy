@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 MAJOR_VERSION = '0'
 MINOR_VERSION = '3'
-MICRO_VERSION = '47'
+MICRO_VERSION = '48'
 VERSION = "{}.{}.{}".format(MAJOR_VERSION, MINOR_VERSION, MICRO_VERSION)
 
 setup(
@@ -15,7 +15,14 @@ setup(
     author_email="kootenpv@gmail.com",
     license="MIT",
     packages=find_packages(),
-    install_requires=["numpy", "scipy", "pandas", "scikit-learn>=0.18.1", "deap", "bitstring"],
+    install_requires=[
+        "numpy",
+        "scipy",
+        "pandas",
+        "scikit-learn>=0.18.1,<0.20",
+        "deap",
+        "bitstring",
+    ],
     classifiers=[
         "Environment :: Console",
         "Intended Audience :: Developers",

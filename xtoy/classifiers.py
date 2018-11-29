@@ -25,7 +25,8 @@ ridge_grid = {
         10,
         100,
         1000,
-        1_000_000,
+        10000,
+        100000,
     ]
 }
 # normalize seems bugged at prediction time!

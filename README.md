@@ -2,6 +2,8 @@
 
 ## XtoY
 
+`pip install xtoy`
+
 Go from 'X' to 'y' without effort.
 
 ``` python

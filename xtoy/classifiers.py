@@ -13,7 +13,7 @@ from sklearn.multioutput import MultiOutputRegressor
 
 class MOR(MultiOutputRegressor):
     def get_params(self, deep=False):
-        params = super().get_params(deep=deep)
+        params = super(MOR, self).get_params(deep=deep)
         params = {k.replace("estimator__", ""): v for k, v in params.items()}
         return params
 

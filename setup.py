@@ -2,8 +2,8 @@ from setuptools import setup
 from setuptools import find_packages
 
 MAJOR_VERSION = '0'
-MINOR_VERSION = '3'
-MICRO_VERSION = '48'
+MINOR_VERSION = '4'
+MICRO_VERSION = '49'
 VERSION = "{}.{}.{}".format(MAJOR_VERSION, MINOR_VERSION, MICRO_VERSION)
 
 setup(
@@ -20,6 +20,8 @@ setup(
         "scipy",
         "pandas",
         "scikit-learn>=0.18.1,<0.20",
+        "xgboost==0.72.1",
+        "lightgbm==2.2.2",
         "deap",
         "bitstring",
     ],

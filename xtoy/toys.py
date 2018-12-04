@@ -12,6 +12,7 @@ from xtoy.scorers import f1_weighted_scorer
 from xtoy.scorers import mse_scorer
 
 from xtoy.utils import get_cv_splits
+from xtoy.utils import calculate_complexity
 
 try:
     import pickle
@@ -29,7 +30,7 @@ class Toy:
         self.n_jobs = n_jobs
         self.kwargs = kwargs
         self.cl_or_reg = cl_or_reg
-        self.featurizer = Featurizer(sparse=True)
+        self.featurizer = Featurizer(sparse=sparse)
         self._feature_name = None
         self.evos = []
 
@@ -42,7 +43,7 @@ class Toy:
                 # ('tsvd', TruncatedSVD()),  # this one also has to have % top features chosen
                 # ('feature_selection', SelectFromModel(Ridge())),
                 ("scaler", Normalizer()),
-                ("clf", clf()),
+                ("estimator", clf()),
             ]
         )
 
@@ -58,16 +59,19 @@ class Toy:
         elif len(y.shape) > 1 and y.shape[1] == 1:
             y = y.ravel()
         X = pd.DataFrame(self.featurizer.fit_transform(X).A)
+        cl_or_reg = classification_or_regression(y)
         if self.scoring is None:
-            tp = classification_or_regression(y)
-            self.scoring = [f1_weighted_scorer, mse_scorer][tp != "classification"]
+            self.scoring = [f1_weighted_scorer, mse_scorer][cl_or_reg != "classification"]
         print(self.scoring)
 
+        complexity = calculate_complexity(X, y, cl_or_reg)
         for model in self.get_models(X, y):
             try:
-                clf = model["clf"]
+                print("estimator:", model["name"])
                 grid = model["grid"]
-                pipeline = self.get_pipeline(clf)
+                if complexity > model["max_complexity"]:
+                    continue
+                pipeline = self.get_pipeline(model["clf"])
                 unique_combinations = np.prod(list(map(len, grid.values())))
                 print("unique_combinations", unique_combinations)
                 kwargs = self.kwargs.copy()
@@ -88,6 +92,9 @@ class Toy:
                 print("Stopped by user. {} models trained.".format(len(evos)))
         self.evos = evos
         self.best_evo = sorted(self.evos, key=lambda x: x[0])[-1][1]
+        import warnings
+
+        warnings.warn("best: {}".format(self.best_evo.best_estimator_))
         return self.best_evo.best_estimator_
 
     def predict(self, X):

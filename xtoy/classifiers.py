@@ -8,9 +8,18 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from xtoy.utils import classification_or_regression
 
+from sklearn.multioutput import MultiOutputRegressor
+
+
+class MOR(MultiOutputRegressor):
+    def get_params(self, deep=False):
+        params = super().get_params(deep=deep)
+        params = {k.replace("estimator__", ""): v for k, v in params.items()}
+        return params
+
 
 ridge_grid = {
-    "clf__alpha": [
+    "estimator__alpha": [
         0.00001,
         0.001,
         0.01,
@@ -31,48 +40,126 @@ ridge_grid = {
 }
 # normalize seems bugged at prediction time!
 
-# ridge_grid = {'clf__alpha': [0.1, 1., 10.]}
+# ridge_grid = {'estimator__alpha': [0.1, 1., 10.]}
 
-ridge_classification = {"clf": RidgeClassifier, "grid": ridge_grid}
-ridge_regression = {"clf": Ridge, "grid": ridge_grid}
+INF = float("inf")
+ridge_classification = {
+    "clf": RidgeClassifier,
+    "grid": ridge_grid,
+    "name": "ridge",
+    "max_complexity": INF,
+}
+ridge_regression = {"clf": Ridge, "grid": ridge_grid, "name": "ridge", "max_complexity": INF}
+
 # ridge_regression = {'clf': svm.SVR, 'grid': {
-#     'clf__shrinking': [True, False],
-#     'clf__C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
-#     'clf__kernel': ['linear', 'poly', 'rbf', 'sigmoid']}}
+#     'estimator__shrinking': [True, False],
+#     'estimator__C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+#     'estimator__kernel': ['linear', 'poly', 'rbf', 'sigmoid']}}
 
 
 rf_grid = {
-    "clf__max_features": ["sqrt", "auto", "log2", 0.5, 0.8, 0.9],
-    "clf__max_depth": [None, 5, 10, 20],
-    "clf__min_samples_leaf": [1, 5, 10],
-    "clf__min_samples_split": [2, 10, 20],
-    "clf__n_estimators": [50],
+    "estimator__max_features": ["sqrt", "auto", "log2", 0.5, 0.8, 0.9],
+    "estimator__max_depth": [None, 5, 10, 20],
+    "estimator__min_samples_leaf": [1, 5, 10],
+    "estimator__min_samples_split": [2, 10, 20],
+    "estimator__n_estimators": [1000],
 }
 
 knn_grid = {
-    "clf__n_neighbors": [1, 2, 3, 5, 10, 20],
-    "clf__leaf_size": [2, 3, 5, 10, 30, 50, 100],
-    "clf__p": [1, 2, 5, 10],
-    "clf__weights": ["uniform", "distance"],
+    "estimator__n_neighbors": [1, 2, 3, 5, 10, 20],
+    "estimator__leaf_size": [2, 3, 5, 10, 30, 50, 100],
+    "estimator__p": [1, 2, 5, 10],
+    "estimator__weights": ["uniform", "distance"],
 }
 
 rf_grid_classification = rf_grid.copy()
-rf_grid_classification.update({"clf__class_weight": ["balanced"]})
+rf_grid_classification.update({"estimator__class_weight": ["balanced"]})
 
-rf_classification = {"clf": RandomForestClassifier, "grid": rf_grid_classification}
-rf_regression = {"clf": RandomForestRegressor, "grid": rf_grid}
+rf_classification = {
+    "clf": RandomForestClassifier,
+    "grid": rf_grid_classification,
+    "name": "rf",
+    "max_complexity": 100000 * 10,
+}
+rf_regression = {
+    "clf": RandomForestRegressor,
+    "grid": rf_grid,
+    "name": "rf",
+    "max_complexity": 100000 * 10,
+}
 
-knn_classification = {"clf": KNeighborsClassifier, "grid": knn_grid}
-knn_regression = {"clf": KNeighborsRegressor, "grid": knn_grid}
-
-# ridge_classification = {'clf': KNeighborsClassifier, 'grid': {
-#    "clf__n_neighbors": [4], "clf__weights": ["distance"]}}
+knn_classification = {
+    "clf": KNeighborsClassifier,
+    "grid": knn_grid,
+    "name": "knn",
+    "max_complexity": 100000 * 100,
+}
+knn_regression = {
+    "clf": KNeighborsRegressor,
+    "grid": knn_grid,
+    "name": "knn",
+    "max_complexity": 100000 * 100,
+}
 
 
 options = {
     "regression": [ridge_regression, rf_regression, knn_regression],
     "classification": [ridge_classification, rf_classification, knn_classification],
 }
+
+xgb_grid = {
+    "estimator__max_depth": [2, 3, 5, 10, 20],
+    "estimator__min_child_weight": [1, 3, 5, 10, 15, 20],
+    "estimator__learning_rate": [0.0001, 0.001, 0.001, 0.01, 0.1, 0.3, 0.5, 0.7, 1],
+    "estimator__n_estimators": [100],
+}
+
+
+try:
+    import xgboost
+
+    xgb_classification = {
+        "clf": xgboost.XGBClassifier,
+        "grid": xgb_grid,
+        "name": "xgb",
+        "max_complexity": 100000 * 10,
+    }
+    xgb_regression = {
+        "clf": lambda: MOR(xgboost.XGBRegressor()),
+        "grid": xgb_grid,
+        "name": "xgb",
+        "max_complexity": 100000 * 10,
+    }
+    options["classification"].append(xgb_classification)
+    options["regression"].append(xgb_regression)
+except ImportError:
+    pass
+
+lgb_grid = {
+    "estimator__num_leaves": [2, 3, 5, 10, 20, 31, 50],
+    "estimator__min_child_weight": [1, 3, 5, 10, 15, 20],
+    "estimator__learning_rate": [0.0001, 0.001, 0.001, 0.01, 0.1, 0.3, 0.5, 0.7, 1],
+}
+
+try:
+    import lightgbm as lgb
+
+    lgb_classification = {
+        "clf": lgb.LGBMClassifier,
+        "grid": lgb_grid,
+        "name": "lgb",
+        "max_complexity": 100000 * 10,
+    }
+    lgb_regression = {
+        "clf": lambda: MOR(lgb.LGBMRegressor()),
+        "grid": lgb_grid,
+        "name": "lgb",
+        "max_complexity": 100000 * 10,
+    }
+    options["classification"].append(lgb_classification)
+    options["regression"].append(lgb_regression)
+except ImportError:
+    pass
 
 
 def sparse_or_dense(X, RAM=None, magic=42):

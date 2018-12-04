@@ -18,6 +18,7 @@ def is_numeric(col):
             return True
         except ValueError:
             return False
+
     return np.all([try_numeric(x) for x in col])
 
 
@@ -27,6 +28,7 @@ def is_integer(col):
             return int(x) == float(x)
         except ValueError:
             return False
+
     return np.all([try_int_comparison(x) for x in col])
 
 
@@ -54,3 +56,14 @@ def get_cv_splits(X, y, sample_size=500, n_splits=3, cl_or_reg=None):
 def classification_or_regression(y):
     uniq = np.unique(y)
     return 'regression' if len(uniq) > 10 or any([is_float(x) for x in uniq]) else 'classification'
+
+
+def calculate_complexity(X, y, cl_or_reg):
+    y_multiplier = 1
+    if len(y.shape) == 2:
+        if y.shape[1] == 1 and cl_or_reg == "classification":
+            y_multiplier = len(np.unique(y)) - 1
+        else:
+            y_multiplier = y.shape[1]
+    X_multiplier = np.prod(X.shape)
+    return X_multiplier * y_multiplier

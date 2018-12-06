@@ -8,15 +8,6 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from xtoy.utils import classification_or_regression
 
-from sklearn.multioutput import MultiOutputRegressor
-
-
-class MOR(MultiOutputRegressor):
-    def get_params(self, deep=False):
-        params = super(MOR, self).get_params(deep=deep)
-        params = {k.replace("estimator__", ""): v for k, v in params.items()}
-        return params
-
 
 ridge_grid = {
     "estimator__alpha": [
@@ -125,7 +116,7 @@ try:
         "max_complexity": 100000 * 10,
     }
     xgb_regression = {
-        "clf": lambda: MOR(xgboost.XGBRegressor()),
+        "clf": xgboost.XGBRegressor,
         "grid": xgb_grid,
         "name": "xgb",
         "max_complexity": 100000 * 10,
@@ -151,7 +142,7 @@ try:
         "max_complexity": 100000 * 10,
     }
     lgb_regression = {
-        "clf": lambda: MOR(lgb.LGBMRegressor()),
+        "clf": lgb.LGBMRegressor,
         "grid": lgb_grid,
         "name": "lgb",
         "max_complexity": 100000 * 10,

@@ -11,8 +11,11 @@ from xtoy.classifiers import classification_or_regression
 from xtoy.scorers import f1_weighted_scorer
 from xtoy.scorers import mse_scorer
 
+from xtoy.multi_output import MOR, MOC
 from xtoy.utils import get_cv_splits
 from xtoy.utils import calculate_complexity
+
+from sklearn.neighbors.base import NeighborsBase
 
 try:
     import pickle
@@ -47,6 +50,15 @@ class Toy:
             ]
         )
 
+    def handle_multi_output(self, y, name, clf):
+        y = np.array(y)
+        if len(y.shape) > 1 and y.shape[1] > 1:
+            if name == "xgb":
+                return None
+            MO = MOC if "Classif" in clf.__name__ else MOR
+            return lambda: MO(clf())
+        return clf
+
     def fit(self, X, y):
         evos = []
         if not isinstance(X, pd.DataFrame):
@@ -71,7 +83,10 @@ class Toy:
                 grid = model["grid"]
                 if complexity > model["max_complexity"]:
                     continue
-                pipeline = self.get_pipeline(model["clf"])
+                clf = self.handle_multi_output(y, model["name"], model["clf"])
+                if clf is None:
+                    continue
+                pipeline = self.get_pipeline(clf)
                 unique_combinations = np.prod(list(map(len, grid.values())))
                 print("unique_combinations", unique_combinations)
                 kwargs = self.kwargs.copy()
@@ -92,9 +107,9 @@ class Toy:
                 print("Stopped by user. {} models trained.".format(len(evos)))
         self.evos = evos
         self.best_evo = sorted(self.evos, key=lambda x: x[0])[-1][1]
-        import warnings
+        # import warnings
 
-        warnings.warn("best: {}".format(self.best_evo.best_estimator_))
+        # warnings.warn("best: {}".format(self.best_evo.best_estimator_))
         return self.best_evo.best_estimator_
 
     def predict(self, X):
@@ -118,10 +133,14 @@ class Toy:
     @property
     def feature_importances_(self):
         clf = self.best_evo.best_estimator_.steps[-1][1]
+        if hasattr(clf, "estimator"):
+            clf = clf.estimator
         if hasattr(clf, "feature_importances_"):
             weights = clf.feature_importances_
         elif hasattr(clf, "coef_"):
             weights = np.abs(clf.coef_)
+        elif isinstance(clf, NeighborsBase):
+            weights = np.array([1] * len(self.featurizer.feature_names_))
         else:
             raise ValueError("No importances could be computed (requires a different classifier).")
         return weights

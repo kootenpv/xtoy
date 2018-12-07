@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import scipy.stats
+
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 
@@ -71,7 +73,8 @@ class Toy:
         elif len(y.shape) > 1 and y.shape[1] == 1:
             y = y.ravel()
         X = pd.DataFrame(self.featurizer.fit_transform(X).A)
-        cl_or_reg = classification_or_regression(y)
+        self.cl_or_reg = self.cl_or_reg or classification_or_regression(y)
+        cl_or_reg = self.cl_or_reg
         if self.scoring is None:
             self.scoring = [f1_weighted_scorer, mse_scorer][cl_or_reg != "classification"]
         print(self.scoring)
@@ -120,6 +123,17 @@ class Toy:
         X = self.featurizer.transform(X).A
         return self.best_evo.predict_proba(X)
 
+    def ensemble_predict(self, X):
+        fn = scipy.stats.mode if self.cl_or_reg == "classification" else np.mean
+        return fn([x[1].predict(X) for x in self.evos], axis=0)[0][0]
+
+    def ensemble_importances_(self, X, y):
+        for score, clf in self.evos:
+            clf.estimator.fit(X, y)
+        Z = [x[0] * self.feature_importances_(x[1].estimator.steps[-1][1]) for x in self.evos]
+        weight_sum = sum([x[0] for x in self.evos])
+        return np.sum(Z, axis=0) / weight_sum
+
     def score(self, X, y):
         X = self.featurizer.transform(X).A
         return self.best_evo.best_estimator_.score(X, y)
@@ -130,9 +144,7 @@ class Toy:
     def best_model_pickle(self):
         return pickle.dumps(self.best_pipeline_)
 
-    @property
-    def feature_importances_(self):
-        clf = self.best_evo.best_estimator_.steps[-1][1]
+    def feature_importances_(self, clf):
         if hasattr(clf, "estimator"):
             clf = clf.estimator
         if hasattr(clf, "feature_importances_"):
@@ -140,9 +152,14 @@ class Toy:
         elif hasattr(clf, "coef_"):
             weights = np.abs(clf.coef_)
         elif isinstance(clf, NeighborsBase):
-            weights = np.array([1] * len(self.featurizer.feature_names_))
+            weights = np.ones(len(self.featurizer.feature_names_))
         else:
             raise ValueError("No importances could be computed (requires a different classifier).")
+        weights = np.abs(weights)
+        if len(weights.shape) > 1:
+            weights = weights.mean(axis=0)
+        weights = weights / np.sum(weights)
+        assert np.isclose(weights.sum(), 1)
         return weights
 
     @property
@@ -153,18 +170,15 @@ class Toy:
     def feature_indices_(self):
         return self.featurizer.feature_indices_
 
-    def best_features_(self, n=10, aggregation=np.max):
+    def best_features_(self, importances, n=10, aggregation=np.max):
         # a bit annoying that aggregation makes different shape if aggregation=None
         # this is whether interested in original features, or post processing.
         # maybe split this in 2 functions
         if aggregation is None:
-            data = list(zip(self.feature_importances_, self.feature_names_))
+            data = list(zip(importances, self.feature_names_))
         else:
             pdata = pd.DataFrame(
-                {
-                    "features": self._feature_name[self.feature_indices_],
-                    "importances": self.feature_importances_,
-                }
+                {"features": self._feature_name[self.feature_indices_], "importances": importances}
             )
             agg = pdata.groupby(["features"]).agg(aggregation)
             data = list(zip(agg["importances"].values, agg.index))

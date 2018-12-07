@@ -91,9 +91,9 @@ class Toy:
                 print("unique_combinations", unique_combinations)
                 kwargs = self.kwargs.copy()
                 if "population_size" not in self.kwargs:
-                    kwargs["population_size"] = np.clip(int(unique_combinations / 1000), 5, 10)
+                    kwargs["population_size"] = np.clip(int(unique_combinations / 100), 5, 10)
                 if "generations_number" not in kwargs:
-                    kwargs["generations_number"] = np.clip(int(unique_combinations / 20), 10, 50)
+                    kwargs["generations_number"] = np.clip(int(unique_combinations / 10), 10, 50)
 
                 evo = evo_search(
                     pipeline, grid, scoring=self.scoring, cv=self.cv, n_jobs=self.n_jobs, **kwargs

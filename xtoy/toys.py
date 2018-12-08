@@ -170,10 +170,20 @@ class Toy:
     def feature_indices_(self):
         return self.featurizer.feature_indices_
 
-    def best_features_(self, importances, n=10, aggregation=np.max):
+    def best_features_(self, importances=None, n=10, aggregation=np.max):
         # a bit annoying that aggregation makes different shape if aggregation=None
         # this is whether interested in original features, or post processing.
         # maybe split this in 2 functions
+        """
+        Default is to use the feature importances from the best model.
+        If importances is not None, it is expected to be an array with weights for the features.
+
+        By default it will aggregate the importances for e.g. text and categorical features.
+        If aggregation is set to None, it will instead print the raw importances of converted X
+
+        Feature weights sum to 1. """
+        if importances is None:
+            importances = self.feature_importances_(self.best_evo.best_estimator_.steps[-1][1])
         if aggregation is None:
             data = list(zip(importances, self.feature_names_))
         else:

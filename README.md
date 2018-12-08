@@ -22,7 +22,7 @@ And a reasonable one at that.
 Check how important each variable is:
 
 ```python
-# names of variables are numbers - only in this example
+# names of variables are numbers - only in this example - otherwise usually strings
 toy.best_features_()
 [(0.02541263748358529, 4),
  (0.03964045497300279, 6),

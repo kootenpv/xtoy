@@ -20,7 +20,6 @@ def apply_toy_on(X, y, cl_or_reg=None):
         y = pd.DataFrame(y)
     toy = Toy(cl_or_reg=cl_or_reg)
     toy.fit(X[0::2], y[0::2])
-    assert toy.feature_importances_.size
     return toy.score(X[1::2], y[1::2])
 
 

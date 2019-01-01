@@ -26,6 +26,8 @@ except (ValueError, SystemError, ImportError):
 
 
 class Toy:
+    """ Toy object """
+
     def __init__(
         self, cv=get_cv_splits, scoring=None, n_jobs=1, cl_or_reg=None, sparse=True, **kwargs
     ):
@@ -111,8 +113,8 @@ class Toy:
         self.evos = evos
         self.best_evo = sorted(self.evos, key=lambda x: x[0])[-1][1]
         # import warnings
-
         # warnings.warn("best: {}".format(self.best_evo.best_estimator_))
+        print("best: {}".format(self.best_evo.best_estimator_))
         return self.best_evo.best_estimator_
 
     def predict(self, X):

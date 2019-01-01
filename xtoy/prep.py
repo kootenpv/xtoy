@@ -46,8 +46,12 @@ class DataFrameImputer(TransformerMixin):
     def get_impute_val(self, col):
         if col.dtype == np.dtype("O"):
             val = self.most_frequent(col)
+        elif str(col.dtype) == "category":
+            val = self.most_frequent(col)
         elif col.dtype == np.dtype(float):
             val = col.mean()
+        elif isinstance(col[0], pd.Timestamp):
+            val = pd.Timestamp(int(np.mean(col.astype(int))))
         else:
             val = col.median()
         if isinstance(val, float) and np.isnan(val):
@@ -114,7 +118,9 @@ class Featurizer(BaseEstimator, TransformerMixin):
         for i, col in enumerate(X):
             if self.drop_vars[i]:
                 continue
-            if is_numeric(X[col]):
+            if isinstance(X[col][0], pd.Timestamp):
+                self.add_date_var(i, col)
+            elif is_numeric(X[col]):
                 if len(set(X[col])) > 2:
                     self.feature_names_.append("{}_{}_continuous".format(col, i))
                 else:
@@ -132,12 +138,7 @@ class Featurizer(BaseEstimator, TransformerMixin):
                     except ValueError:
                         break
                 else:
-                    self.date_vars[i] = True
-                    date_var_names = [
-                        "{}_date_{}".format(col, x) for j, x in enumerate(self.date_atts)
-                    ]
-                    self.feature_names_.extend(date_var_names)
-                    self.feature_indices_.append(i)
+                    self.add_date_var(i, col)
 
         for i, (ohed, col) in enumerate(zip(self.ohe_indices, X)):
             if (
@@ -202,6 +203,12 @@ class Featurizer(BaseEstimator, TransformerMixin):
         self.feature_indices_ = np.array(self.feature_indices_)
         return self
 
+    def add_date_var(self, i, col):
+        self.date_vars[i] = True
+        date_var_names = ["{}_date_{}".format(col, x) for j, x in enumerate(self.date_atts)]
+        self.feature_names_.extend(date_var_names)
+        self.feature_indices_.append(i)
+
     def transform(self, X, y=None):
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
@@ -219,7 +226,9 @@ class Featurizer(BaseEstimator, TransformerMixin):
                 res.append(X[col].astype(float))
             elif not self.ohe_indices[i] and self.date_vars[i]:
                 prefix = str(col) + "__"
-                dtimes = [parse(x) for x in X[col]]
+                dtimes = X[col]
+                if not isinstance(X[col][0], pd.Timestamp):
+                    dtimes = [parse(x) for x in X[col]]
                 for a in self.date_atts:
                     dcol = [x.weekday() if a == "weekday" else getattr(x, a) for x in dtimes]
                     res.append(dcol)

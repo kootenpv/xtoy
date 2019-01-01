@@ -225,9 +225,8 @@ class Featurizer(BaseEstimator, TransformerMixin):
             if self.numeric_indices[i]:
                 res.append(X[col].astype(float))
             elif not self.ohe_indices[i] and self.date_vars[i]:
-                prefix = str(col) + "__"
-                dtimes = X[col]
-                if not isinstance(X[col][0], pd.Timestamp):
+                dtimes = list(X[col])
+                if not isinstance(dtimes[0], pd.Timestamp):
                     dtimes = [parse(x) for x in X[col]]
                 for a in self.date_atts:
                     dcol = [x.weekday() if a == "weekday" else getattr(x, a) for x in dtimes]

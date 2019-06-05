@@ -29,7 +29,15 @@ class Toy:
     """ Toy object """
 
     def __init__(
-        self, cv=get_cv_splits, scoring=None, n_jobs=1, cl_or_reg=None, sparse=True, **kwargs
+        self,
+        cv=get_cv_splits,
+        scoring=None,
+        n_jobs=1,
+        cl_or_reg=None,
+        sparse=True,
+        use_lightgbm=False,
+        use_xgboost=False,
+        **kwargs,
     ):
         self.cv = get_cv_splits
         self.evo = None
@@ -40,9 +48,14 @@ class Toy:
         self.featurizer = Featurizer(sparse=sparse)
         self._feature_name = None
         self.evos = []
+        self.use_lightgbm = use_lightgbm
+        self.use_xgboost = use_xgboost
 
     def get_models(self, X, y):
-        return pick(X, y, self.cl_or_reg)
+        models = pick(X, y, self.cl_or_reg)
+        models = [x for x in models if self.use_xgboost or x["name"] != "xgb"]
+        models = [x for x in models if self.use_lightgbm or x["name"] != "lgb"]
+        return models
 
     def get_pipeline(self, clf):
         return Pipeline(

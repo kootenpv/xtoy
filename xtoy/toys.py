@@ -37,7 +37,7 @@ class Toy:
         sparse=True,
         use_lightgbm=False,
         use_xgboost=False,
-        **kwargs,
+        **kwargs
     ):
         self.cv = get_cv_splits
         self.evo = None

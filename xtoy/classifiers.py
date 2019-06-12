@@ -1,7 +1,8 @@
 # from sklearn.svm import SVC
 import scipy
 from sklearn import svm
-from sklearn.decomposition import TruncatedSVD
+
+# from sklearn.decomposition import TruncatedSVD
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import Ridge, RidgeClassifier
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
